@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+cd `dirname $0`
+npm run build
+
+rsync -aHv --delete build/ root@squirrelpay.ca:/var/www/html/
