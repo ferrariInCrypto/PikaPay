@@ -1,6 +1,5 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import GradientBar from "./components/GradientBar";
 import { useAccount, useSigner } from "wagmi";
 import {
   EAS,
@@ -8,14 +7,17 @@ import {
   SchemaEncoder,
   TypedDataSigner,
 } from "@ethereum-attestation-service/eas-sdk";
-import { Signer, ethers } from "ethers";
-import { Link, useSearchParams } from "react-router-dom";
+import { ethers } from "ethers";
+import { Link } from "react-router-dom";
 import { CustomConnectButton } from "./components/ui/CustomConnectKit";
 import { ERC20_ABI } from "./erc20-abi";
-// import { PikaPAY_ABI } from "./Pikapay-abi";
-import PikaPAY_ABI  from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
+import SQUIRRELPAY_ABI from "./artifacts/contracts/SquirrelPay.sol/SquirrelPay.json";
 
-
+const Title = styled.div`
+  color: #163a54;
+  font-size: 22px;
+  font-family: Montserrat, sans-serif;
+`;
 
 const Container = styled.div`
   @media (max-width: 700px) {
@@ -37,7 +39,35 @@ const MetButton = styled.div`
   cursor: pointer;
 `;
 
+const SubText = styled(Link)`
+  display: block;
+  cursor: pointer;
+  text-decoration: underline;
+  color: #ababab;
+  margin-top: 20px;
+`;
 
+const InputContainer = styled.div`
+  position: relative;
+  height: 90px;
+`;
+
+const InputBlock = styled.input`
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(19, 30, 38, 0.33);
+  background: rgba(255, 255, 255, 0.5);
+  color: #131e26;
+  font-size: 18px;
+  font-family: Chalkboard, sans-serif;
+  padding: 20px 10px;
+  text-align: center;
+  margin-top: 12px;
+  box-sizing: border-box;
+  width: 100%;
+`;
 
 const WhiteBox = styled.div`
   box-shadow: 0 4px 33px rgba(168, 198, 207, 0.15);
@@ -62,7 +92,7 @@ const eas = new Offchain(
   1
 );
 
-function Home() {
+function Main() {
   const { status, address } = useAccount();
   const { data: signer } = useSigner();
 
@@ -110,39 +140,51 @@ function Home() {
     return JSON.stringify(attestation);
   };
 
-
   const depositFunds = async (amount: number, attestation: string) => {
     try {
-      const tokenAddress = "0x23261542222e0FB9b295a755f6127Ec4AEE4b0Bf";
-      const PikaPayContractAddress =
-        "0x82CF502962972D961Ed29fF9E0D7A9dc81969Ebe";
+        const tokenAddress = "0xEbBd9625d36A4C91B028846C6faDE5dBfDb2e458";
+        const squirrelPayContractAddress =
+            "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
-      const tokenContract = new ethers.Contract(
-        tokenAddress,
-        // Assuming the ABI for the token contract is already available
-        ERC20_ABI,
-        signer!
-      );
+        const tokenContract = new ethers.Contract(
+            tokenAddress,
+            ERC20_ABI,
+            signer!
+        );
 
-      // Approve unlimited spending
-      const unlimitedAmount = ethers.constants.MaxUint256;
-      await tokenContract.approve(PikaPayContractAddress, unlimitedAmount);
+        // Approve unlimited spending
+        const unlimitedAmount = ethers.constants.MaxUint256;
+        const approveTx = await tokenContract.approve(squirrelPayContractAddress, unlimitedAmount);
+        await approveTx.wait(); // Wait for approval to be mined
 
-      // Call the deposit function on the smart contract
-      const contract = new ethers.Contract(
-        PikaPayContractAddress,
-        PikaPAY_ABI.abi,
-        signer!
-      );
-      console.log("depositing", amount, attestation);
+        // Set up the contract to listen for events
+        const contract = new ethers.Contract(
+            squirrelPayContractAddress,
+            SQUIRRELPAY_ABI.abi,
+            signer!
+        );
 
-      const depositTx = await contract.deposit(attestation, amount);
-      console.log("Transaction ID:", depositTx.hash);
-      setTxnId(depositTx.hash);
+        // Listening for the Deposit event
+        contract.once("Deposit", (batchId: number, attestation: string, amount: ethers.BigNumber) => {
+            console.log("Deposit Event:");
+            console.log(`Batch ID: ${batchId}`, `Attestation: ${attestation}`, `Amount: ${ethers.utils.formatUnits(amount, 6)} USDT`);
+            alert(`Batch ID: ${batchId}`);
+        });
+
+        console.log("depositing", amount, attestation);
+
+        // Call the deposit function on the smart contract
+        const depositTx = await contract.deposit(attestation, amount);
+        console.log("Transaction ID:", depositTx.hash);
+        setTxnId(depositTx.hash);
+        
+        // Wait for the transaction to be mined
+        await depositTx.wait(); // This will ensure that the Deposit event is emitted
+
     } catch (error) {
-      console.error("Error depositing funds:", error);
+        console.error("Error depositing funds:", error);
     }
-  };
+};
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -158,10 +200,9 @@ function Home() {
   if (status !== "connected") {
     return (
       <Container>
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center font-Archivo items-center min-h-screen font-fira-sans-condensed-thin">
           <div className="bg-white rounded-md shadow-md p-16 flex flex-col items-center space-y-4">
-            <img src="./logo-wide.png" alt="Logo" className="w-96" />
-
+            <h1 className="text-center text-2xl   ">Welcome to PikaPay</h1>
             <div className="h-3" />
 
             <CustomConnectButton />
@@ -172,17 +213,13 @@ function Home() {
   }
 
   return (
-    <Container>
-      <GradientBar />
+    <Container className="font-Archivo">
+
       <WhiteBox>
-        <div className="flex justify-center items-center">
-          <img src="./logo-wide.png" alt="Logo" className="w-96" />
-        </div>
 
-        <p className="my-4">Connected as: {address}</p>
 
-        <div className="container mx-auto">
-          <h1 className="text-xl font-bold mb-4">Deposit into payroll pool</h1>
+        <div className="container mx-auto ">
+          <h1 className="text-xl font-bold mb-4">Deposit funds into Pika pool</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="business" className="block text-sm font-medium">
@@ -222,13 +259,13 @@ function Home() {
             </div>
             <button
               type="submit"
-              className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
+              className="bg-transparent bg-gray-900 text-gray-300 font-semibold hover:text-white py-2 px-4 border border-gray-800hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
             >
               Submit
             </button>
             {txnId && (
               <p className="mt-4">
-                <a href={"https://zkevm.polygonscan.com/tx/" + txnId}>
+                <a href={"https://testnet.bttcscan.com/tx/" + txnId}>
                   Transaction ID: {txnId}
                 </a>
               </p>
@@ -256,12 +293,12 @@ const TransferBeneficialOwnership = () => {
     recipient: string,
     amount: number
   ) => {
-    const PikaPayContractAddress =
-      "0x82CF502962972D961Ed29fF9E0D7A9dc81969Ebe";
+    const squirrelPayContractAddress =
+      "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
     const contract = new ethers.Contract(
-      PikaPayContractAddress,
-      PikaPAY_ABI.abi,
+      squirrelPayContractAddress,
+      SQUIRRELPAY_ABI.abi,
       signer!
     );
 
@@ -274,13 +311,14 @@ const TransferBeneficialOwnership = () => {
     setTxnId(depositTx.hash);
   };
 
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await transferBeneficialOwnership(batchID, recipient, Number(amount));
   };
 
   return (
-    <div className="container mx-auto">
+    <div className="container font-Archivo mx-auto">
       <h1 className="text-xl font-bold mb-4">Transfer beneficial ownership</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -321,13 +359,13 @@ const TransferBeneficialOwnership = () => {
         </div>
         <button
           type="submit"
-          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
+          className="bg-transparent bg-gray-900 text-gray-300 font-semibold hover:text-white py-2 px-4 border border-gray-800hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
         >
           Submit
         </button>
         {txnId && (
           <p className="mt-4">
-            <a href={"https://zkevm.polygonscan.com/tx/" + txnId}>
+            <a href={"https://testnet.bttcscan.com/tx/" + txnId}>
               Transaction ID: {txnId}
             </a>
           </p>
@@ -344,12 +382,12 @@ const WithdrawWithAttestation = () => {
   const { data: signer } = useSigner();
 
   const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
-    const PikaPayContractAddress =
-      "0x82CF502962972D961Ed29fF9E0D7A9dc81969Ebe";
+    const squirrelPayContractAddress =
+      "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
     const contract = new ethers.Contract(
-      PikaPayContractAddress,
-      PikaPAY_ABI.abi,
+      squirrelPayContractAddress,
+      SQUIRRELPAY_ABI.abi,
       signer!
     );
 
@@ -370,7 +408,7 @@ const WithdrawWithAttestation = () => {
   };
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto font-Archivo">
       <h1 className="text-xl font-bold mb-4">Withdraw with attestation</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -399,13 +437,13 @@ const WithdrawWithAttestation = () => {
         </div>
         <button
           type="submit"
-          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
+          className="bg-transparent bg-gray-900 text-gray-300 font-semibold hover:text-white py-2 px-4 border border-gray-800hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
         >
           Submit
         </button>
         {txnId && (
           <p className="mt-4">
-            <a href={"https://zkevm.polygonscan.com/tx/" + txnId}>
+            <a href={"https://testnet.bttcscan.com/tx/" + txnId}>
               Transaction ID: {txnId}
             </a>
           </p>
@@ -415,5 +453,4 @@ const WithdrawWithAttestation = () => {
   );
 };
 
-
-export default Home;
+export default Main;
