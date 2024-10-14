@@ -4,10 +4,17 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 
+// module.exports = buildModule("USDT", (m) => {
+
+//    const usdt = m.contract("USDT");
+//   return { usdt};
+
+// });
+
 module.exports = buildModule("PikaPay", (m) => {
 
-   const PikaPay = m.contract("PikaPay");
-  return { PikaPay};
+  const pikaPay = m.contract("PikaPay");
+ return { pikaPay};
 
 });
 

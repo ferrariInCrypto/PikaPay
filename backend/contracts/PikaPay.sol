@@ -23,7 +23,7 @@ contract PikaFractionalAttestationToken is ERC20 {
     }
 
     // Hook function to ensure only PikaPay can transfer this token type
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal view  {
+    function _beforeTokenTransfer(address from) internal view  {
         require(from == address(pikaPay), "Only PikaPay contract can initiate transfers.");
     }
 }
@@ -50,7 +50,7 @@ contract PikaPay {
     event BatchFinalized(uint256 batchId);
     event BatchUpdated(uint256 batchId, string updatedAttestationDetails);
 
-    ERC20 public constant USDT = ERC20(0x23261542222e0FB9b295a755f6127Ec4AEE4b0Bf);  // Constant USDT token address on zkEVM
+    ERC20 public constant USDT = ERC20(0x683A59A90E14216b70057d95C243b118819f4000);  // Constant USDT token address on zkEVM
 
     constructor() {}
 
