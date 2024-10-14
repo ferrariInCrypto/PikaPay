@@ -11,7 +11,7 @@ import { ethers } from "ethers";
 import { Link } from "react-router-dom";
 import { CustomConnectButton } from "./components/ui/CustomConnectKit";
 import { ERC20_ABI } from "./erc20-abi";
-import SQUIRRELPAY_ABI from "./artifacts/contracts/SquirrelPay.sol/SquirrelPay.json";
+import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
 const Title = styled.div`
   color: #163a54;
@@ -143,7 +143,7 @@ function Main() {
   const depositFunds = async (amount: number, attestation: string) => {
     try {
         const tokenAddress = "0xEbBd9625d36A4C91B028846C6faDE5dBfDb2e458";
-        const squirrelPayContractAddress =
+        const PIKAPAYContractAddress =
             "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
         const tokenContract = new ethers.Contract(
@@ -154,13 +154,13 @@ function Main() {
 
         // Approve unlimited spending
         const unlimitedAmount = ethers.constants.MaxUint256;
-        const approveTx = await tokenContract.approve(squirrelPayContractAddress, unlimitedAmount);
+        const approveTx = await tokenContract.approve(PIKAPAYContractAddress, unlimitedAmount);
         await approveTx.wait(); // Wait for approval to be mined
 
         // Set up the contract to listen for events
         const contract = new ethers.Contract(
-            squirrelPayContractAddress,
-            SQUIRRELPAY_ABI.abi,
+            PIKAPAYContractAddress,
+            PIKAPAY_ABI.abi,
             signer!
         );
 
@@ -293,12 +293,12 @@ const TransferBeneficialOwnership = () => {
     recipient: string,
     amount: number
   ) => {
-    const squirrelPayContractAddress =
+    const PIKAPAYContractAddress =
       "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
     const contract = new ethers.Contract(
-      squirrelPayContractAddress,
-      SQUIRRELPAY_ABI.abi,
+      PIKAPAYContractAddress,
+      PIKAPAY_ABI.abi,
       signer!
     );
 
@@ -382,12 +382,12 @@ const WithdrawWithAttestation = () => {
   const { data: signer } = useSigner();
 
   const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
-    const squirrelPayContractAddress =
+    const PIKAPAYContractAddress =
       "0xA2552C2f43608ADAAEf8D23d90044C482640611F";
 
     const contract = new ethers.Contract(
-      squirrelPayContractAddress,
-      SQUIRRELPAY_ABI.abi,
+      PIKAPAYContractAddress,
+      PIKAPAY_ABI.abi,
       signer!
     );
 
