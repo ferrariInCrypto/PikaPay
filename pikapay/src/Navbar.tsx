@@ -15,10 +15,10 @@ const Navbar = () => {
   }, [status]);
 
   return (
-    <nav className="bg-gray-900 p-4">
-      <div className="container mx-auto flex justify-between items-center">
+    <nav className="p-4">
+      <div className="container mx-auto flex justify-evenly items-center">
         {/* Left Side - Heading */}
-        <div className="text-white text-xl font-bold">PikaPay</div>
+        <h1 className="text-gray-700 text-2xl font-bold">PikaPay</h1>
 
         {/* Right Side - User Address and Connect Wallet Button */}
         <div className="flex items-center space-x-4">
@@ -28,7 +28,7 @@ const Navbar = () => {
           ) : (
             <>
               <span className="text-gray-400">
-                {status === "connected" ? address : "Not connected"}
+                {status === "connected" ? address.slice(0,9) + "..."  + address.slice(9,18): "Not connected"}
               </span>
               {/* Conditional rendering for the Connect Wallet Button */}
               {status !== "connected" && <CustomConnectButton />}

@@ -28,9 +28,10 @@ export const CustomConnectButton = () => {
       {({ isConnected, show, truncatedAddress, ensName }) => {
         return (
           <button
-            onClick={show}
-            className="bg-transparent  text-gray-700 font-semibold py-2 px-4 border border-gray-500 hover:border-transparent rounded shadow-md transition duration-300 ease-in-out"
-          >
+          onClick={show}
+          className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
+          bg-gray-700 hover:bg-gray-500"
+      >
             {isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}
           </button>
         );
