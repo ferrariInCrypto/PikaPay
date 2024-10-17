@@ -4,14 +4,11 @@ import { useSigner } from "wagmi";
 import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
-
 const Container = styled.div`
   @media (max-width: 700px) {
     width: 100%;
   }
 `;
-
-
 
 const WhiteBox = styled.div`
   box-shadow: 0 4px 33px rgba(168, 198, 207, 0.15);
@@ -32,6 +29,7 @@ const TransferBeneficialOwnership = () => {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
+  const [buttonInput, setButtonInput] = useState("Transfer");
   const { data: signer } = useSigner();
 
   const transferBeneficialOwnership = async (
@@ -39,31 +37,56 @@ const TransferBeneficialOwnership = () => {
     recipient: string,
     amount: number
   ) => {
-    
-    const PIKAPAYContractAddress = "0xf2a5CA8E05F104Fe9912c35110D267f449151c2D";
+    const PIKAPAYContractAddress = "0x81871eB3482d29A9d7E401472C64E755f824859d";
+
+    if (!signer) {
+      alert("Please connect your wallet first");
+      return;
+    }
 
     const contract = new ethers.Contract(
       PIKAPAYContractAddress,
       PIKAPAY_ABI.abi,
-      signer!
+      signer
     );
 
-    const transferTx = await contract.transferBatchOwnership(
-      Number(batchID),
-      recipient,
-      amount
-    );
+    try {
+      setButtonInput("Transferring...");
 
-    await transferTx.wait();
+      const transferTx = await contract.transferBatchOwnership(
+        Number(batchID),
+        recipient,
+        ethers.utils.parseUnits(amount.toString(), 18) // Assuming 6 decimals for token
+      );
 
-    console.log("Transaction ID:", transferTx.hash);
-    setTxnId(transferTx.hash);
+      await transferTx.wait();
+
+      setTxnId(transferTx.hash);
+      setButtonInput("Transfer");
+
+      // Listen for the OwnershipTransferred event
+      contract.once(
+        "OwnershipTransferred",
+        (batchId, previousOwner, newOwner, transferredAmount) => {
+          console.log(
+            `Ownership Transferred: Batch ID ${batchId}, from ${previousOwner} to ${newOwner}, amount: ${transferredAmount.toString()}`
+          );
+          alert(`Ownership Transferred successfully! Tx ID: ${transferTx.hash}`);
+        }
+      );
+    } catch (error : any) {
+      console.error("Transfer Error: ", error);
+      alert("Transfer failed: " + error.message);
+      setButtonInput("Transfer");
+    }
   };
-
-
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!batchID || !recipient || !amount) {
+      alert("Please fill in all the fields.");
+      return;
+    }
     await transferBeneficialOwnership(batchID, recipient, Number(amount));
   };
 
@@ -72,7 +95,7 @@ const TransferBeneficialOwnership = () => {
       <WhiteBox>
         <div className="container mx-auto">
           <h1 className="text-2xl text-gray-800 font-bold mb-4">
-            Transfer beneficial ownership
+            Transfer Beneficial Ownership
           </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -113,15 +136,20 @@ const TransferBeneficialOwnership = () => {
             </div>
             <button
               type="submit"
-              className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
+              className="px-4 py-2 rounded-md text-white font-Archivo transition-colors duration-300 
               bg-gray-700 hover:bg-gray-500"
             >
-              Transfer
+              {buttonInput}
             </button>
             {txnId && (
               <p className="mt-4">
-                <a className=" font-Archivo text-gray-500 " href={"https://testnet.bttcscan.com/tx/" + txnId}>
-                  TxID: {txnId.slice(0,9)+ "..." + txnId.slice(9,18)}
+                <a
+                  className="font-Archivo text-gray-500"
+                  href={"https://testnet.bttcscan.com/tx/" + txnId}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  TxID: {txnId.slice(0, 9) + "..." + txnId.slice(-9)}
                 </a>
               </p>
             )}

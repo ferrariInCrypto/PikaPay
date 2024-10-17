@@ -4,6 +4,8 @@
 pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract PikaFractionalAttestationToken is ERC20 {
@@ -24,11 +26,13 @@ contract PikaFractionalAttestationToken is ERC20 {
             "PFAT" // Token symbol PFAT = Pika Fractional Attestation Token
         )
     {
+        require(_initialSupply > 0, "Initial supply must be greater than 0");
         pikaPay = _pikaPay;
         batchId = _batchId;
         _mint(msg.sender, _initialSupply); // Minting the initial token supply to the deployer
     }
 
+    // Hook function to ensure only PikaPay can transfer this token type
     // Hook function to ensure only PikaPay can transfer this token type
     function _beforeTokenTransfer(address from) internal view {
         require(
@@ -38,7 +42,9 @@ contract PikaFractionalAttestationToken is ERC20 {
     }
 }
 
-contract PikaPay {
+contract PikaPay  {
+    using SafeERC20 for ERC20;
+
     // Struct to represent each Batch with its associated token and metadata
     struct Batch {
         uint256 batchId; // Unique batch identifier
@@ -47,6 +53,7 @@ contract PikaPay {
         uint256 totalSupply; // Total token supply in this batch
         uint256 remainingSupply; // Remaining supply available for withdrawal
         bool isFinalized; // Tracks if the batch is finalized
+        address owner; // Owner of the batch
     }
 
     uint256 public totalBatches = 0; // Total number of batches created
@@ -56,37 +63,63 @@ contract PikaPay {
     // Events for logging deposit, withdrawal, and batch updates
     event BatchCreated(
         uint256 batchId,
+        address indexed owner,
         string attestationDetails,
         uint256 totalAmount
     );
     event AttestedWithdrawal(
         uint256 batchId,
-        address beneficiary,
+        address indexed beneficiary,
         uint256 amount,
         string attestation,
         string metadata
     );
     event PrivateWithdrawal(
         uint256 batchId,
-        address beneficiary,
+        address indexed beneficiary,
         uint256 amount,
         string metadata
     );
     event BatchFinalized(uint256 batchId);
     event BatchUpdated(uint256 batchId, string updatedAttestationDetails);
+    event OwnershipTransferred(
+        uint256 batchId,
+        address indexed previousOwner,
+        address indexed newOwner,
+        uint256 amount
+    );
 
     ERC20 public constant USDT =
-        ERC20(0x48db5c1155836dE945fB82b6A9CF82D91AC21f16); // Constant USDT token address 
+        ERC20(0x48db5c1155836dE945fB82b6A9CF82D91AC21f16); // Constant USDT token address
 
-    constructor() {}
+    // Modifier to restrict actions to batch owners
+    modifier onlyBatchOwner(uint256 _batchId) {
+        require(
+            batchRegistry[_batchId].owner == msg.sender,
+            "Caller is not the batch owner"
+        );
+        _;
+    }
+
+    // Modifier to validate batch existence
+    modifier validBatchId(uint256 _batchId) {
+        require(_batchId > 0 && _batchId <= totalBatches, "Invalid batch ID");
+        _;
+    }
 
     // Function to create a new batch with a custom attestation and deposit an initial supply of tokens
     function createNewBatchWithAttestation(
         string calldata _attestationDetails,
         uint256 _depositAmount
-    ) external {
+    ) external  {
+        // require(
+        //     bytes(_attestationDetails).length > 0,
+        //     "Attestation details required"
+        // );
+        require(_depositAmount > 0, "Deposit amount must be greater than 0");
+
         totalBatches += 1;
-        USDT.transferFrom(msg.sender, address(this), _depositAmount);
+        USDT.safeTransferFrom(msg.sender, address(this), _depositAmount);
 
         // Deploy a new instance of PikaFractionalAttestationToken for the batch
         PikaFractionalAttestationToken token = new PikaFractionalAttestationToken(
@@ -94,17 +127,24 @@ contract PikaPay {
                 totalBatches,
                 _depositAmount
             );
-        batchRegistry[totalBatches] = Batch(
-            totalBatches,
-            token,
-            _attestationDetails,
-            _depositAmount,
-            _depositAmount,
-            false
-        );
+
+        batchRegistry[totalBatches] = Batch({
+            batchId: totalBatches,
+            token: token,
+            attestationDetails: _attestationDetails,
+            totalSupply: _depositAmount,
+            remainingSupply: _depositAmount,
+            isFinalized: false,
+            owner: msg.sender
+        });
 
         beneficiaryBalances[totalBatches][msg.sender] = _depositAmount; // Set the depositor as the initial owner
-        emit BatchCreated(totalBatches, _attestationDetails, _depositAmount);
+        emit BatchCreated(
+            totalBatches,
+            msg.sender,
+            _attestationDetails,
+            _depositAmount
+        );
     }
 
     // Function to transfer the ownership of a portion of tokens to another beneficiary
@@ -112,13 +152,22 @@ contract PikaPay {
         uint256 _batchId,
         address _newOwner,
         uint256 _transferAmount
-    ) external {
+    ) external  validBatchId(_batchId) onlyBatchOwner(_batchId) {
+        require(_newOwner != address(0), "Invalid new owner address");
         require(
             beneficiaryBalances[_batchId][msg.sender] >= _transferAmount,
             "Insufficient balance for transfer."
         );
+
         beneficiaryBalances[_batchId][msg.sender] -= _transferAmount;
         beneficiaryBalances[_batchId][_newOwner] += _transferAmount;
+
+        emit OwnershipTransferred(
+            _batchId,
+            msg.sender,
+            _newOwner,
+            _transferAmount
+        );
     }
 
     // Withdraw tokens with attestation, emitting metadata for transparency
@@ -126,11 +175,9 @@ contract PikaPay {
         uint256 _batchId,
         uint256 _withdrawAmount,
         string calldata _metadata
-    ) external {
-        require(
-            !batchRegistry[_batchId].isFinalized,
-            "Batch has already been finalized."
-        );
+    ) external  validBatchId(_batchId) {
+        Batch storage batch = batchRegistry[_batchId];
+        require(!batch.isFinalized, "Batch has already been finalized.");
         require(
             beneficiaryBalances[_batchId][msg.sender] >= _withdrawAmount,
             "Insufficient balance for withdrawal."
@@ -138,21 +185,21 @@ contract PikaPay {
 
         // Update the balances and transfer tokens
         beneficiaryBalances[_batchId][msg.sender] -= _withdrawAmount;
-        batchRegistry[_batchId].remainingSupply -= _withdrawAmount;
+        batch.remainingSupply -= _withdrawAmount;
 
-        USDT.transfer(msg.sender, _withdrawAmount);
-        batchRegistry[_batchId].token.transfer(msg.sender, _withdrawAmount);
+        USDT.safeTransfer(msg.sender, _withdrawAmount);
+        batch.token.transfer(msg.sender, _withdrawAmount);
 
         emit AttestedWithdrawal(
             _batchId,
             msg.sender,
             _withdrawAmount,
-            batchRegistry[_batchId].attestationDetails,
+            batch.attestationDetails,
             _metadata
         );
 
         // Finalize the batch if all tokens have been withdrawn
-        if (batchRegistry[_batchId].remainingSupply == 0) {
+        if (batch.remainingSupply == 0) {
             finalizeBatch(_batchId);
         }
     }
@@ -162,22 +209,42 @@ contract PikaPay {
         uint256 _batchId,
         uint256 _withdrawAmount,
         string calldata _metadata
-    ) external {
-        //This function is under development
+    ) external  validBatchId(_batchId) {
+        Batch storage batch = batchRegistry[_batchId];
+        require(!batch.isFinalized, "Batch has already been finalized.");
+        require(
+            beneficiaryBalances[_batchId][msg.sender] >= _withdrawAmount,
+            "Insufficient balance for withdrawal."
+        );
+
+        // Update balances and transfer the partial amount
+        beneficiaryBalances[_batchId][msg.sender] -= _withdrawAmount;
+        batch.remainingSupply -= _withdrawAmount;
+
+        USDT.safeTransfer(msg.sender, _withdrawAmount);
+        emit PrivateWithdrawal(
+            _batchId,
+            msg.sender,
+            _withdrawAmount,
+            _metadata
+        );
+
+        // Finalize the batch if all tokens have been withdrawn
+        if (batch.remainingSupply == 0) {
+            finalizeBatch(_batchId);
+        }
     }
 
     // Finalize a batch when all tokens have been withdrawn to prevent further actions
     function finalizeBatch(uint256 _batchId) internal {
+        Batch storage batch = batchRegistry[_batchId];
+        require(!batch.isFinalized, "Batch is already finalized.");
         require(
-            !batchRegistry[_batchId].isFinalized,
-            "Batch is already finalized."
-        );
-        require(
-            batchRegistry[_batchId].remainingSupply == 0,
+            batch.remainingSupply == 0,
             "There are still unwithdrawn tokens."
         );
 
-        batchRegistry[_batchId].isFinalized = true;
+        batch.isFinalized = true;
         emit BatchFinalized(_batchId);
     }
 
@@ -185,48 +252,14 @@ contract PikaPay {
     function modifyBatchAttestation(
         uint256 _batchId,
         string calldata _newAttestationDetails
-    ) external {
+    ) external validBatchId(_batchId) onlyBatchOwner(_batchId) {
+        Batch storage batch = batchRegistry[_batchId];
         require(
-            !batchRegistry[_batchId].isFinalized,
-            "Cannot modify attestation for a finalized batch."
+            !batch.isFinalized,
+            "Cannot update attestation for a finalized batch."
         );
-        batchRegistry[_batchId].attestationDetails = _newAttestationDetails;
+
+        batch.attestationDetails = _newAttestationDetails;
         emit BatchUpdated(_batchId, _newAttestationDetails);
-    }
-
-    // Partial withdrawal to allow the user to withdraw in increments
-    function withdrawPartialAmount(
-        uint256 _batchId,
-        uint256 _partialAmount,
-        string calldata _metadata
-    ) external {
-        require(
-            !batchRegistry[_batchId].isFinalized,
-            "Batch has been finalized."
-        );
-        require(
-            beneficiaryBalances[_batchId][msg.sender] >= _partialAmount,
-            "Insufficient balance for partial withdrawal."
-        );
-
-        // Update balances and transfer the partial amount
-        beneficiaryBalances[_batchId][msg.sender] -= _partialAmount;
-        batchRegistry[_batchId].remainingSupply -= _partialAmount;
-
-        USDT.transfer(msg.sender, _partialAmount);
-        emit PrivateWithdrawal(_batchId, msg.sender, _partialAmount, _metadata);
-
-        // Finalize the batch if the remaining supply becomes zero
-        if (batchRegistry[_batchId].remainingSupply == 0) {
-            finalizeBatch(_batchId);
-        }
-    }
-
-    // View function to retrieve the balance of a specific beneficiary within a batch
-    function getBeneficiaryBalance(
-        uint256 _batchId,
-        address _beneficiary
-    ) external view returns (uint256) {
-        return beneficiaryBalances[_batchId][_beneficiary];
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useSigner } from "wagmi";
+import { useSigner, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
@@ -29,59 +29,67 @@ const WithdrawWithAttestation = () => {
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
   const { data: signer } = useSigner();
+  const { address } = useAccount(); // Correct use of useAccount hook
+
+  const [buttonInput, setButtonInput] = useState("Withdraw");
 
   const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
-    const PIKAPAYContractAddress = "0xf2a5CA8E05F104Fe9912c35110D267f449151c2D";
+    if (!signer) {
+      alert("Please connect your wallet.");
+      return;
+    }
 
-    const contract = new ethers.Contract(
-      PIKAPAYContractAddress,
-      PIKAPAY_ABI.abi,
-      signer!
-    );
+    const PIKAPAYContractAddress = "0x81871eB3482d29A9d7E401472C64E755f824859d";
+    const contract = new ethers.Contract(PIKAPAYContractAddress, PIKAPAY_ABI.abi, signer);
 
     const meta = "";
+    setButtonInput("Withdrawing...");
 
-    const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18); // Adjust parsing for 18 decimals
-
-    //AttestedWithdrawal
-
-    contract.once(
-      "AttestedWithdrawal",
-      (
-        batchId: number,
-        benefeciary: string,
-        amount: ethers.BigNumber,
-        attestation: string,
-        a
-      ) => {
-        console.log("BatchCreated event received:");
-        console.log(
-          `Transaction Logs`,
-          `Batch ID: ${batchId}`,
-          `Attestation: ${attestation}`
-        ); 
-        alert(`Batch ID: ${batchId}` + `` + `Attestation: ${attestation}`);
-      }
-    );
+    // Parse amount (assuming USDT has 6 decimals)
+    const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18);
 
     try {
-      const withdrawTx = await contract.withdrawWithAttestationProof(
-        Number(batchID),
-        parsedAmount,
-        meta
+      // Check if the user has enough balance
+      const balance = await contract.beneficiaryBalances(batchID, address);
+      const formattedBalance = ethers.utils.formatUnits(balance, 18);
+
+      console.log("Beneficiary Balance:", formattedBalance);
+
+      if (balance.lt(parsedAmount)) {
+        throw new Error("Insufficient balance for withdrawal.");
+      }
+
+      // Listen for the AttestedWithdrawal event
+      contract.once(
+        "AttestedWithdrawal",
+        (batchId: number, beneficiary: string, amount: ethers.BigNumber, attestation: string, metadata: string) => {
+          console.log(`AttestedWithdrawal event received:`);
+          console.log(`Batch ID: ${batchId}, Attestation: ${attestation}`);
+          alert(`Batch ID: ${batchId}, Attestation: ${attestation}`);
+        }
       );
 
-      await withdrawTx.wait(); // This ensures that the event will be emitted
+      // Call withdrawWithAttestationProof
+      const withdrawTx = await contract.withdrawWithAttestationProof(Number(batchID), parsedAmount, meta);
+
+      await withdrawTx.wait(); // Ensure the transaction is mined
 
       console.log("Transaction ID:", withdrawTx.hash);
       setTxnId(withdrawTx.hash);
-    } catch (e: any) {
-      alert("Error" + e.message);
+      setButtonInput("Withdraw");
+    } catch (error: any) {
+      console.error("Error: ", error);
+      alert("Error: " + error.message);
+      setButtonInput("Withdraw");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!batchID || !amount) {
+      alert("Please provide both Batch ID and Amount.");
+      return;
+    }
     await doWithdrawWithAttestation(batchID, Number(amount));
   };
 
@@ -119,15 +127,14 @@ const WithdrawWithAttestation = () => {
             </div>
             <button
               type="submit"
-              className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
-              bg-gray-700 hover:bg-gray-500"
+              className="px-4 py-2 rounded-md text-white font-Archivo transition-colors duration-300 bg-gray-700 hover:bg-gray-500"
             >
-              Withdraw
+              {buttonInput}
             </button>
             {txnId && (
               <p className="mt-4">
                 <a
-                  className=" font-Archivo text-gray-500 "
+                  className="font-Archivo text-gray-500"
                   href={"https://testnet.bttcscan.com/tx/" + txnId}
                 >
                   TxID: {txnId.slice(0, 9) + "..." + txnId.slice(9, 18)}

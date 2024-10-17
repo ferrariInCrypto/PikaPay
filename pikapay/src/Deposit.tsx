@@ -94,7 +94,7 @@ function Deposit() {
     try {
         setButtonInput("Depositing ..");
         const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
-        const PIKAPAYContractAddress = "0xf2a5CA8E05F104Fe9912c35110D267f449151c2D";
+        const PIKAPAYContractAddress = "0x81871eB3482d29A9d7E401472C64E755f824859d";
   
         const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer!);
   
@@ -108,15 +108,13 @@ function Deposit() {
         // Set up the contract to interact with
         const contract = new ethers.Contract(PIKAPAYContractAddress, PIKAPAY_ABI.abi, signer!);
   
-        // Listening for the BatchCreated event BEFORE calling the function to ensure you catch it
-        contract.once("BatchCreated", (batchId: number, attestation: string, amount: ethers.BigNumber) => {
-            console.log("BatchCreated event received:");
-            console.log(`Batch ID: ${batchId}`, `Attestation: ${attestation}`, `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`); // Correct formatting for 18 decimals
+        // Listening for the BatchCreated event BEFORE calling the function
+        contract.on("BatchCreated", (batchId: number, address: string, attestation: string, amount: ethers.BigNumber) => {
+            console.log("BatchCreated event received:", address);
+            console.log(`Batch ID: ${batchId}`, `Attestation: ${attestation}`, `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`);
             alert(`Batch ID: ${batchId}`);
             setButtonInput("Deposit");
         });
-  
-     
   
         // Convert the amount to 18 decimals
         const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18); // Adjust parsing for 18 decimals
@@ -124,7 +122,6 @@ function Deposit() {
   
         // Call the deposit function on the smart contract
         const depositTx = await contract.createNewBatchWithAttestation(attestation, parsedAmount); // Use the parsed amount with 18 decimals
-      
   
         // Wait for the transaction to be mined
         await depositTx.wait(); // This ensures that the event will be emitted

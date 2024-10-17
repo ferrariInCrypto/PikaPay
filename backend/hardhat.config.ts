@@ -23,4 +23,4 @@ export default config;
 
 
 // USDT#USDT - 0x48db5c1155836dE945fB82b6A9CF82D91AC21f16
-// PikaPay#PikaPay - 0xf2a5CA8E05F104Fe9912c35110D267f449151c2D
+// PikaPay#PikaPay - 
