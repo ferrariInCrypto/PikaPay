@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 
 
 const PRIVATE_KEY = "baced1297f569a8e02962b7618c4ce6fc9bff2fd394849e0249175608a2597ae"; 
+
  // Optional BTTCScan API key for verification
 
 
@@ -21,4 +22,5 @@ const config: HardhatUserConfig = {
 export default config;
 
 
-// usdt 0x683A59A90E14216b70057d95C243b118819f4000
+// USDT#USDT - 0x48db5c1155836dE945fB82b6A9CF82D91AC21f16
+// PikaPay#PikaPay - 0xf2a5CA8E05F104Fe9912c35110D267f449151c2D

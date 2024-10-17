@@ -1,15 +1,9 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useAccount, useSigner } from "wagmi";
-import { Signer, ethers } from "ethers";
+import { useSigner } from "wagmi";
+import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
-import { Link } from "react-router-dom";
 
-const Title = styled.div`
-  color: #163a54;
-  font-size: 22px;
-  font-family: Montserrat, sans-serif;
-`;
 
 const Container = styled.div`
   @media (max-width: 700px) {
@@ -17,49 +11,7 @@ const Container = styled.div`
   }
 `;
 
-const MetButton = styled.div`
-  border-radius: 10px;
-  border: 1px solid #cfb9ff;
-  background: #333342;
-  width: 100%;
-  padding: 20px 10px;
-  box-sizing: border-box;
-  color: #fff;
-  font-size: 18px;
-  font-family: Montserrat, sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-`;
 
-const SubText = styled(Link)`
-  display: block;
-  cursor: pointer;
-  text-decoration: underline;
-  color: #ababab;
-  margin-top: 20px;
-`;
-
-const InputContainer = styled.div`
-  position: relative;
-  height: 90px;
-`;
-
-const InputBlock = styled.input`
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 10px;
-  border: 1px solid rgba(19, 30, 38, 0.33);
-  background: rgba(255, 255, 255, 0.5);
-  color: #131e26;
-  font-size: 18px;
-  font-family: Chalkboard, sans-serif;
-  padding: 20px 10px;
-  text-align: center;
-  margin-top: 12px;
-  box-sizing: border-box;
-  width: 100%;
-`;
 
 const WhiteBox = styled.div`
   box-shadow: 0 4px 33px rgba(168, 198, 207, 0.15);
@@ -87,7 +39,8 @@ const TransferBeneficialOwnership = () => {
     recipient: string,
     amount: number
   ) => {
-    const PIKAPAYContractAddress = "0xE1A5a5Da4bDab7a052c66BFC91Ee705ccc90B21A";
+    
+    const PIKAPAYContractAddress = "0xf2a5CA8E05F104Fe9912c35110D267f449151c2D";
 
     const contract = new ethers.Contract(
       PIKAPAYContractAddress,
@@ -95,14 +48,19 @@ const TransferBeneficialOwnership = () => {
       signer!
     );
 
-    const depositTx = await contract.transferBatchOwnership(
+    const transferTx = await contract.transferBatchOwnership(
       Number(batchID),
       recipient,
       amount
     );
-    console.log("Transaction ID:", depositTx.hash);
-    setTxnId(depositTx.hash);
+
+    await transferTx.wait();
+
+    console.log("Transaction ID:", transferTx.hash);
+    setTxnId(transferTx.hash);
   };
+
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -158,15 +116,12 @@ const TransferBeneficialOwnership = () => {
               className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
               bg-gray-700 hover:bg-gray-500"
             >
-              Submit
+              Transfer
             </button>
             {txnId && (
               <p className="mt-4">
-                <a
-                  className="underline font-Archivo text-gray-500 underline-offset-1"
-                  href={"https://testnet.bttcscan.com/tx/" + txnId}
-                >
-                  TxID: https://testnet.bttcscan.com/tx/{txnId.slice(0, 9)}
+                <a className=" font-Archivo text-gray-500 " href={"https://testnet.bttcscan.com/tx/" + txnId}>
+                  TxID: {txnId.slice(0,9)+ "..." + txnId.slice(9,18)}
                 </a>
               </p>
             )}

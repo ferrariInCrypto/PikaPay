@@ -1,4 +1,3 @@
-import { Header } from "./components/Header";
 import { Outlet } from "react-router-dom"; // Corrected import for Outlet
 import { createClient, WagmiConfig } from "wagmi";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
@@ -46,8 +45,7 @@ export function Root() {
             hideTooltips: true,
           }}
         >
-          <Navbar />
-          <Header />
+          <Navbar />  
           <Outlet />
         </ConnectKitProvider>
       </WagmiConfig>

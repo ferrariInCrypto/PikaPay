@@ -1,64 +1,13 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useAccount, useSigner } from "wagmi";
-import { Signer, ethers } from "ethers";
+import { useSigner } from "wagmi";
+import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
-import { Link } from "react-router-dom";
-
-const Title = styled.div`
-  color: #163a54;
-  font-size: 22px;
-  font-family: Montserrat, sans-serif;
-`;
 
 const Container = styled.div`
   @media (max-width: 700px) {
     width: 100%;
   }
-`;
-
-const MetButton = styled.div`
-  border-radius: 10px;
-  border: 1px solid #cfb9ff;
-  background: #333342;
-  width: 100%;
-  padding: 20px 10px;
-  box-sizing: border-box;
-  color: #fff;
-  font-size: 18px;
-  font-family: Montserrat, sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-`;
-
-const SubText = styled(Link)`
-  display: block;
-  cursor: pointer;
-  text-decoration: underline;
-  color: #ababab;
-  margin-top: 20px;
-`;
-
-const InputContainer = styled.div`
-  position: relative;
-  height: 90px;
-`;
-
-const InputBlock = styled.input`
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 10px;
-  border: 1px solid rgba(19, 30, 38, 0.33);
-  background: rgba(255, 255, 255, 0.5);
-  color: #131e26;
-  font-size: 18px;
-  font-family: Chalkboard, sans-serif;
-  padding: 20px 10px;
-  text-align: center;
-  margin-top: 12px;
-  box-sizing: border-box;
-  width: 100%;
 `;
 
 const WhiteBox = styled.div`
@@ -82,7 +31,7 @@ const WithdrawWithAttestation = () => {
   const { data: signer } = useSigner();
 
   const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
-    const PIKAPAYContractAddress = "0xE1A5a5Da4bDab7a052c66BFC91Ee705ccc90B21A";
+    const PIKAPAYContractAddress = "0xf2a5CA8E05F104Fe9912c35110D267f449151c2D";
 
     const contract = new ethers.Contract(
       PIKAPAYContractAddress,
@@ -92,13 +41,43 @@ const WithdrawWithAttestation = () => {
 
     const meta = "";
 
-    const depositTx = await contract.withdrawWithAttestationProof(
-      Number(batchID),
-      amount,
-      meta
+    const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18); // Adjust parsing for 18 decimals
+
+    //AttestedWithdrawal
+
+    contract.once(
+      "AttestedWithdrawal",
+      (
+        batchId: number,
+        benefeciary: string,
+        amount: ethers.BigNumber,
+        attestation: string,
+        a
+      ) => {
+        console.log("BatchCreated event received:");
+        console.log(
+          `Transaction Logs`,
+          `Batch ID: ${batchId}`,
+          `Attestation: ${attestation}`
+        ); 
+        alert(`Batch ID: ${batchId}` + `` + `Attestation: ${attestation}`);
+      }
     );
-    console.log("Transaction ID:", depositTx.hash);
-    setTxnId(depositTx.hash);
+
+    try {
+      const withdrawTx = await contract.withdrawWithAttestationProof(
+        Number(batchID),
+        parsedAmount,
+        meta
+      );
+
+      await withdrawTx.wait(); // This ensures that the event will be emitted
+
+      console.log("Transaction ID:", withdrawTx.hash);
+      setTxnId(withdrawTx.hash);
+    } catch (e: any) {
+      alert("Error" + e.message);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -143,15 +122,15 @@ const WithdrawWithAttestation = () => {
               className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
               bg-gray-700 hover:bg-gray-500"
             >
-              Submit
+              Withdraw
             </button>
             {txnId && (
               <p className="mt-4">
                 <a
-                  className="underline font-Archivo text-gray-500 underline-offset-1"
+                  className=" font-Archivo text-gray-500 "
                   href={"https://testnet.bttcscan.com/tx/" + txnId}
                 >
-                  TxID: https://testnet.bttcscan.com/tx/{txnId.slice(0, 9)}
+                  TxID: {txnId.slice(0, 9) + "..." + txnId.slice(9, 18)}
                 </a>
               </p>
             )}
