@@ -10,8 +10,6 @@ import { ethers } from "ethers";
 import { ERC20_ABI } from "./Erc20Abi";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
-
-
 const Container = styled.div`
   @media (max-width: 700px) {
     width: 100%;
@@ -32,16 +30,7 @@ const WhiteBox = styled.div`
   }
 `;
 
-const eas = new Offchain(
-  {
-    address: "0x0000000000000000000000000000000000000000",
-    chainId: 1029,
-    version: "0.26",
-  },
-  1
-);
-
-function Deposit() {
+const Deposit = () => {
   const { status, address } = useAccount();
   const { data: signer } = useSigner();
 
@@ -49,28 +38,33 @@ function Deposit() {
   const [purpose, setPurpose] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
-  const [buttonInput , setButtonInput]=useState('Deposit')
+  const [buttonInput, setButtonInput] = useState("Deposit");
+  const [batch, setBatch] = useState<number | null>(null);
+  const [notification, setNotification] = useState("");
+
+  const eas = new Offchain(
+    {
+      address: "0x0000000000000000000000000000000000000000",
+      chainId: 1029,
+      version: "0.26",
+    },
+    1
+  );
 
   const createAttestation = async (
     business: string,
     purpose: string,
     sender: string
   ) => {
-    // your actual implementation of createAttestation should go here
     const schemaEncoder = new SchemaEncoder(
       "string business,string purpose,address sender"
     );
     const encoded = schemaEncoder.encodeData([
-      { name: "business", type: "string", value: "test business" },
-      { name: "purpose", type: "string", value: "test purpose" },
-      {
-        name: "sender",
-        type: "address",
-        value: "0xC16BA0330334B747582D9B7D2d89bdde6008E4a1",
-      },
+      { name: "business", type: "string", value: business },
+      { name: "purpose", type: "string", value: purpose },
+      { name: "sender", type: "address", value: sender },
     ]);
 
-   
     const attestation = await eas.signOffchainAttestation(
       {
         recipient: "0x0000000000000000000000000000000000000000",
@@ -92,53 +86,75 @@ function Deposit() {
 
   const depositFunds = async (amount: number, attestation: string) => {
     try {
-        setButtonInput("Depositing ..");
-        const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
-        const PIKAPAYContractAddress = "0x81871eB3482d29A9d7E401472C64E755f824859d";
-  
-        const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer!);
-  
-        // Approve unlimited spending
-        const unlimitedAmount = ethers.constants.MaxUint256;
-        const approveTx = await tokenContract.approve(PIKAPAYContractAddress, unlimitedAmount);
-        await approveTx.wait(); // Wait for approval to be mined
-  
-        console.log("Approval transaction confirmed");
-  
-        // Set up the contract to interact with
-        const contract = new ethers.Contract(PIKAPAYContractAddress, PIKAPAY_ABI.abi, signer!);
-  
-        // Listening for the BatchCreated event BEFORE calling the function
-        contract.on("BatchCreated", (batchId: number, address: string, attestation: string, amount: ethers.BigNumber) => {
-            console.log("BatchCreated event received:", address);
-            console.log(`Batch ID: ${batchId}`, `Attestation: ${attestation}`, `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`);
-            alert(`Batch ID: ${batchId}`);
-            setButtonInput("Deposit");
-        });
-  
-        // Convert the amount to 18 decimals
-        const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18); // Adjust parsing for 18 decimals
-        console.log("Parsed Amount:", parsedAmount.toString());
-  
-        // Call the deposit function on the smart contract
-        const depositTx = await contract.createNewBatchWithAttestation(attestation, parsedAmount); // Use the parsed amount with 18 decimals
-  
-        // Wait for the transaction to be mined
-        await depositTx.wait(); // This ensures that the event will be emitted
-        setTxnId(depositTx.hash); // Update txnId after transaction is confirmed
-  
-        console.log("Deposit transaction mined");
-        setAmount("");
-        setBusiness("");
-        setPurpose("");
-    
-    } catch (error) {
-        console.error("Error depositing funds:", error);
-    }
-};
+      setButtonInput("Depositing ..");
+      const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
+      const PIKAPAYContractAddress =
+        "0x81871eB3482d29A9d7E401472C64E755f824859d";
 
-  
-    const handleSubmit = async (e: any) => {
+      const tokenContract = new ethers.Contract(
+        tokenAddress,
+        ERC20_ABI,
+        signer!
+      );
+
+      // Approve unlimited spending
+      const unlimitedAmount = ethers.constants.MaxUint256;
+      const approveTx = await tokenContract.approve(
+        PIKAPAYContractAddress,
+        unlimitedAmount
+      );
+      await approveTx.wait();
+
+      console.log("Approval transaction confirmed");
+
+      // Set up the contract to interact with
+      const contract = new ethers.Contract(
+        PIKAPAYContractAddress,
+        PIKAPAY_ABI.abi,
+        signer!
+      );
+
+      // Listen for the BatchCreated event
+      contract.on(
+        "BatchCreated",
+        (
+          batchId: number,
+          address: string,
+          attestation: string,
+          amount: ethers.BigNumber
+        ) => {
+          console.log("BatchCreated event received:", address);
+          console.log(
+            `Batch ID: ${batchId}`,
+            `Attestation: ${attestation}`,
+            `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`
+          );
+
+          // Update batch and show alert
+          setBatch(batchId);
+          setNotification(`Batch Created Successfully! Batch ID: ${batchId}`); // Set combined notification message
+          setButtonInput("Deposit");
+          alert(`Batch ID: ${batchId}`);
+        }
+      );
+
+      const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18);
+
+      const depositTx = await contract.createNewBatchWithAttestation(
+        attestation,
+        parsedAmount
+      );
+      await depositTx.wait();
+      setTxnId(depositTx.hash);
+      setAmount("");
+      setBusiness("");
+      setPurpose("");
+    } catch (error) {
+      console.error("Error depositing funds:", error);
+    }
+  };
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const attestation = await createAttestation(
@@ -146,17 +162,16 @@ function Deposit() {
       purpose,
       address as string
     );
-    depositFunds(Number(amount), attestation);
+    await depositFunds(Number(amount), attestation);
   };
 
- 
   return (
     <Container className="font-Archivo">
-
       <WhiteBox>
-
         <div className="container mx-auto ">
-          <h1 className="text-2xl text-gray-800 font-bold mb-4">Deposit funds in the pool</h1>
+          <h1 className="text-2xl text-gray-800 font-bold mb-4">
+            Deposit funds in the pool
+          </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="business" className="block text-sm font-medium">
@@ -196,24 +211,33 @@ function Deposit() {
             </div>
             <button
               type="submit"
-              className="px-4 py-2 rounded-md text-white  font-Archivo transition-colors duration-300 
-              bg-gray-700 hover:bg-gray-500"
-          >
+              className="px-4 py-2 rounded-md text-white font-Archivo transition-colors duration-300 bg-gray-700 hover:bg-gray-500"
+            >
               {buttonInput}
             </button>
             {txnId && (
-              <p className="mt-4">
-                <a className=" font-Archivo text-gray-500 " href={"https://testnet.bttcscan.com/tx/" + txnId}>
-                  TxID: {txnId.slice(0,9)+ "..." + txnId.slice(9,18)}
-                </a>
-              </p>
+              <>
+                <p className="mt-4">
+                  <a
+                    className="font-Archivo text-gray-500"
+                    href={"https://testnet.bttcscan.com/tx/" + txnId}
+                  >
+                    TxID: {txnId.slice(0, 9) + "..." + txnId.slice(9, 18)}
+                  </a>
+                </p>
+                
+                {notification && (
+                  <p className="mt-4 text-md font-Archivo text-gray-500">
+                    BatchId: {batch?.toString()}
+                  </p>
+                )}
+              </>
             )}
           </form>
-          </div>
+        </div>
       </WhiteBox>
-      
     </Container>
   );
-}
+};
 
 export default Deposit;

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: UNLICENSED
-// Written by: trevor@tk.co
 
 pragma solidity ^0.8.27;
 
@@ -9,10 +8,12 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract PikaFractionalAttestationToken is ERC20 {
+
     PikaPay public pikaPay;
     uint256 public batchId;
 
     // Constructor to initialize the Fractional Attestation Token with a unique batch ID
+
     constructor(
         PikaPay _pikaPay,
         uint256 _batchId,
@@ -29,11 +30,12 @@ contract PikaFractionalAttestationToken is ERC20 {
         require(_initialSupply > 0, "Initial supply must be greater than 0");
         pikaPay = _pikaPay;
         batchId = _batchId;
-        _mint(msg.sender, _initialSupply); // Minting the initial token supply to the deployer
+        _mint(msg.sender, _initialSupply);
     }
 
     // Hook function to ensure only PikaPay can transfer this token type
     // Hook function to ensure only PikaPay can transfer this token type
+
     function _beforeTokenTransfer(address from) internal view {
         require(
             from == address(pikaPay),
@@ -46,6 +48,7 @@ contract PikaPay  {
     using SafeERC20 for ERC20;
 
     // Struct to represent each Batch with its associated token and metadata
+    
     struct Batch {
         uint256 batchId; // Unique batch identifier
         PikaFractionalAttestationToken token; // Token representing fractional ownership
