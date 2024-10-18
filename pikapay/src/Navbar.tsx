@@ -1,6 +1,6 @@
 import { useAccount } from "wagmi";
 import { CustomConnectButton } from "./components/ui/CustomConnectKit";
-import { useState, useEffect } from "react";
+
 
 const Navbar = () => {
   const { status, address } = useAccount(); // Removed error from here

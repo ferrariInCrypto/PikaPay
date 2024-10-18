@@ -84,7 +84,7 @@ const Deposit = () => {
     return JSON.stringify(attestation);
   };
 
-  const depositFunds = async (amount: number, attestation: string) => {
+  const depositFundsWithAttestation = async (amount: number, attestation: string) => {
     try {
       setButtonInput("Depositing ..");
       const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
@@ -162,7 +162,7 @@ const Deposit = () => {
       purpose,
       address as string
     );
-    await depositFunds(Number(amount), attestation);
+    await depositFundsWithAttestation(Number(amount), attestation);
   };
 
   return (
