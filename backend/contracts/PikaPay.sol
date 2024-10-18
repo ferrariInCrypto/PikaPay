@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.27;
 
@@ -48,7 +48,7 @@ contract PikaPay  {
     using SafeERC20 for ERC20;
 
     // Struct to represent each Batch with its associated token and metadata
-    
+
     struct Batch {
         uint256 batchId; // Unique batch identifier
         PikaFractionalAttestationToken token; // Token representing fractional ownership
