@@ -208,34 +208,16 @@ contract PikaPay  {
     }
 
     // Withdraw tokens privately without attestation, providing optional metadata
+    
     function withdrawWithoutAttestation(
         uint256 _batchId,
         uint256 _withdrawAmount,
         string calldata _metadata
     ) external  validBatchId(_batchId) {
-        Batch storage batch = batchRegistry[_batchId];
-        require(!batch.isFinalized, "Batch has already been finalized.");
-        require(
-            beneficiaryBalances[_batchId][msg.sender] >= _withdrawAmount,
-            "Insufficient balance for withdrawal."
-        );
 
-        // Update balances and transfer the partial amount
-        beneficiaryBalances[_batchId][msg.sender] -= _withdrawAmount;
-        batch.remainingSupply -= _withdrawAmount;
+        // The function will alllow the user t withdraw without attestation. The following code is under develepment
 
-        USDT.safeTransfer(msg.sender, _withdrawAmount);
-        emit PrivateWithdrawal(
-            _batchId,
-            msg.sender,
-            _withdrawAmount,
-            _metadata
-        );
 
-        // Finalize the batch if all tokens have been withdrawn
-        if (batch.remainingSupply == 0) {
-            finalizeBatch(_batchId);
-        }
     }
 
     // Finalize a batch when all tokens have been withdrawn to prevent further actions
