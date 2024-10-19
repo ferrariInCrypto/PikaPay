@@ -1,28 +1,7 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import { useSigner, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
-
-const Container = styled.div`
-  @media (max-width: 700px) {
-    width: 100%;
-  }
-`;
-
-const WhiteBox = styled.div`
-  box-shadow: 0 4px 33px rgba(168, 198, 207, 0.15);
-  background-color: #fff;
-  padding: 36px;
-  max-width: 650px;
-  border-radius: 10px;
-  margin: 40px auto 0;
-  box-sizing: border-box;
-
-  @media (max-width: 700px) {
-    width: 100%;
-  }
-`;
 
 const WithdrawWithAttestation = () => {
   const [batchID, setBatchID] = useState("");
@@ -94,8 +73,8 @@ const WithdrawWithAttestation = () => {
   };
 
   return (
-    <Container className="font-Archivo">
-      <WhiteBox>
+    <div className="w-full sm:max-w-full mx-auto p-4 font-Archivo">
+      <div className="shadow-md bg-white p-9 max-w-lg rounded-lg mx-auto mt-10">
         <div className="container mx-auto">
           <h1 className="text-2xl text-gray-800 font-bold mb-4">
             Withdraw with attestation
@@ -143,8 +122,8 @@ const WithdrawWithAttestation = () => {
             )}
           </form>
         </div>
-      </WhiteBox>
-    </Container>
+      </div>
+    </div>
   );
 };
 

@@ -44,12 +44,15 @@ const Deposit = () => {
 
   const eas = new Offchain(
     {
-      address: "0x0000000000000000000000000000000000000000",
+      address: "0x0000000000000000000000000000000000000000", //would replace it with eas BTTC deployed address in the future , but fine for now
       chainId: 1029,
       version: "0.26",
     },
     1
   );
+
+  const PIKAPAYContractAddress =
+  "0x81871eB3482d29A9d7E401472C64E755f824859d";
 
   const createAttestation = async (
     business: string,
@@ -67,7 +70,7 @@ const Deposit = () => {
 
     const attestation = await eas.signOffchainAttestation(
       {
-        recipient: "0x0000000000000000000000000000000000000000",
+        recipient: PIKAPAYContractAddress,
         data: encoded,
         refUID: ethers.constants.HashZero,
         revocable: true,
@@ -88,8 +91,7 @@ const Deposit = () => {
     try {
       setButtonInput("Depositing ..");
       const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
-      const PIKAPAYContractAddress =
-        "0x81871eB3482d29A9d7E401472C64E755f824859d";
+ 
 
       const tokenContract = new ethers.Contract(
         tokenAddress,
