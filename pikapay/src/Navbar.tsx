@@ -1,5 +1,5 @@
 import { useAccount } from "wagmi";
-import { CustomConnectButton } from "./components/ui/CustomConnectKit";
+import { CustomConnectButton } from "./components/CustomConnectKit";
 
 
 const Navbar = () => {
