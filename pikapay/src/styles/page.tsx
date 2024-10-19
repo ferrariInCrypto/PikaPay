@@ -12,7 +12,7 @@ export const OuterScreenBlockPadding = styled.div`
 `;
 
 export const PageTitle = styled.div`
-  font-family: "Montserrat", serif;
+ 
   font-style: normal;
   font-weight: 700;
   font-size: 20px;

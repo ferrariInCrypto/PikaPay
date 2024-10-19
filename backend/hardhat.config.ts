@@ -1,8 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomiclabs/hardhat-ethers";
 
-
-const PRIVATE_KEY = "baced1297f569a8e02962b7618c4ce6fc9bff2fd394849e0249175608a2597ae"; 
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
  // Optional BTTCScan API key for verification
 
