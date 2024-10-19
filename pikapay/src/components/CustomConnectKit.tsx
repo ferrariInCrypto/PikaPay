@@ -1,7 +1,6 @@
 import { ConnectKitButton } from "connectkit";
 
 
-
 export const CustomConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
