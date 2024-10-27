@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import NavButton from "./NavButton"; // Ensure the correct path to your NavButton component
 import Deposit from "./Deposit";
-import TransferBeneficialOwnership from "./TransferBeneficialOwnership";
+import Transfer from "./Transfer";
 import WithdrawWithAttestation from "./WithdrawWithAttestation";
 
 const Main: React.FC = () => {
@@ -23,7 +23,7 @@ const Main: React.FC = () => {
           active={activeComponent === "TransferBeneficialOwnership"}
           onClick={() => setActiveComponent("TransferBeneficialOwnership")}
         >
-          Transfer Beneficial Ownership
+          Transfer Ownership Rights
         </NavButton>
         <NavButton
           active={activeComponent === "WithdrawWithAttestation"}
@@ -41,7 +41,7 @@ const Main: React.FC = () => {
         )}
         {activeComponent === "TransferBeneficialOwnership" && (
           <div>
-            <TransferBeneficialOwnership />
+            <Transfer />
           </div>
         )}
         {activeComponent === "WithdrawWithAttestation" && (
@@ -49,6 +49,11 @@ const Main: React.FC = () => {
             <WithdrawWithAttestation />
           </div>
         )}
+
+        <div className="flex mt-12 font-Archivo text-gray-600 justify-center items-center"> 
+        © 2024 Pikapay. All rights reserved.
+
+           </div>
       </div>
     </div>
   );

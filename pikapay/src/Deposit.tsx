@@ -10,6 +10,10 @@ import { ethers } from "ethers";
 import { ERC20_ABI } from "./Erc20Abi";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
+import toast, { Toaster } from 'react-hot-toast';
+
+
+
 const Container = styled.div`
   @media (max-width: 700px) {
     width: 100%;
@@ -42,6 +46,9 @@ const Deposit = () => {
   const [batch, setBatch] = useState<number | null>(null);
   const [notification, setNotification] = useState("");
 
+
+  const notify = (id : any) => toast('Here is your batchId' +  " : " + id);
+
   const eas = new Offchain(
     {
       address: "0x0000000000000000000000000000000000000000", //would replace it with eas BTTC deployed address in the future , but fine for now
@@ -51,8 +58,7 @@ const Deposit = () => {
     1
   );
 
-  const PIKAPAYContractAddress =
-  "0x81871eB3482d29A9d7E401472C64E755f824859d";
+  const PIKAPAYContractAddress = "0x005e9582bAA30520ba18cd1f859A0bB6919674D3";
 
   const createAttestation = async (
     business: string,
@@ -87,11 +93,14 @@ const Deposit = () => {
     return JSON.stringify(attestation);
   };
 
-  const depositFundsWithAttestation = async (amount: number, attestation: string) => {
+  const depositFundsWithAttestation = async (
+    amount: number,
+    attestation: string
+  ) => {
+    setButtonInput("Depositing ..");
+
     try {
-      setButtonInput("Depositing ..");
       const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
- 
 
       const tokenContract = new ethers.Contract(
         tokenAddress,
@@ -99,16 +108,24 @@ const Deposit = () => {
         signer!
       );
 
-      // Approve unlimited spending
       const unlimitedAmount = ethers.constants.MaxUint256;
       const approveTx = await tokenContract.approve(
         PIKAPAYContractAddress,
         unlimitedAmount
       );
+
       await approveTx.wait();
 
       console.log("Approval transaction confirmed");
+    } catch (error: any) {
 
+      alert(error.message);
+      console.log("Approval transaction failed");
+    }
+
+    // Approve unlimited spending
+
+    try {
       // Set up the contract to interact with
       const contract = new ethers.Contract(
         PIKAPAYContractAddress,
@@ -136,7 +153,7 @@ const Deposit = () => {
           setBatch(batchId);
           setNotification(`Batch Created Successfully! Batch ID: ${batchId}`); // Set combined notification message
           setButtonInput("Deposit");
-          alert(`Batch ID: ${batchId}`);
+          notify(batchId)
         }
       );
 
@@ -147,7 +164,9 @@ const Deposit = () => {
         parsedAmount
       );
       await depositTx.wait();
+
       setTxnId(depositTx.hash);
+
       setAmount("");
       setBusiness("");
       setPurpose("");
@@ -227,7 +246,7 @@ const Deposit = () => {
                     TxID: {txnId.slice(0, 9) + "..." + txnId.slice(9, 18)}
                   </a>
                 </p>
-                
+
                 {notification && (
                   <p className="mt-4 text-md font-Archivo text-gray-500">
                     BatchId: {batch?.toString()}
