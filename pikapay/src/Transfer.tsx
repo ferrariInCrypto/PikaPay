@@ -72,13 +72,13 @@ const TransferBeneficialOwnership = () => {
   return (
     <div className="font-Archivo">
       <div className="max-w-[650px] mx-auto mt-10 p-9 bg-white rounded-lg shadow-[0_4px_33px_rgba(168,198,207,0.15)] box-border">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">
           Transfer Ownership Rights
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="batchID" className="block text-sm font-medium">
-              Batch ID
+              Group ID
             </label>
             <input
               type="text"
@@ -90,7 +90,7 @@ const TransferBeneficialOwnership = () => {
           </div>
           <div>
             <label htmlFor="recipient" className="block text-sm font-medium">
-              Recipient
+              Recipient Address
             </label>
             <input
               type="text"
@@ -102,7 +102,7 @@ const TransferBeneficialOwnership = () => {
           </div>
           <div>
             <label htmlFor="amount" className="block text-sm font-medium">
-              Amount
+            Amount to Transfer
             </label>
             <input
               type="number"
@@ -118,6 +118,8 @@ const TransferBeneficialOwnership = () => {
           >
             {buttonInput}
           </button>
+
+          <p className="mt-4 text-gray-500"> Note : This transfer would be using zksnarks to ensure privacy preservations. </p>
           {txnId && (
             <p className="mt-4">
               <a

@@ -10,7 +10,7 @@ const Main: React.FC = () => {
 
   return (
     <div>
-      <nav className="flex justify-center items-center space-x-4 p-4 mt-8">
+      <nav className="flex justify-between max-w-[650px] mx-auto  items-center space-x-6 p-4 mt-8">
         {" "}
         {/* Flexbox for layout */}
         <NavButton
@@ -29,7 +29,7 @@ const Main: React.FC = () => {
           active={activeComponent === "WithdrawWithAttestation"}
           onClick={() => setActiveComponent("WithdrawWithAttestation")}
         >
-          Withdraw with Attestation
+          Withdraw Tokens
         </NavButton>
       </nav>
       {/* Additional component rendering based on activeComponent */}

@@ -4,14 +4,14 @@ import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
 const WithdrawPrivately = () => {
-  const [batchID, setBatchID] = useState("");
+  const [GroupID, setGroupID] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
   const { data: signer } = useSigner();
   const { address } = useAccount();
   const [buttonInput, setButtonInput] = useState("Withdraw");
 
-  const doWithdrawPrivately = async (batchID: string, amount: number) => {
+  const doWithdrawPrivately = async (GroupID: string, amount: number) => {
     if (!signer) {
       alert("Please connect your wallet.");
       return;
@@ -27,7 +27,7 @@ const WithdrawPrivately = () => {
 
     try {
       // Check if the user has enough balance
-      const balance = await contract.beneficiaryBalances(batchID, address);
+      const balance = await contract.beneficiaryBalances(GroupID, address);
       const formattedBalance = ethers.utils.formatUnits(balance, 18);
 
       console.log("Beneficiary Balance:", formattedBalance);
@@ -39,15 +39,15 @@ const WithdrawPrivately = () => {
       // Listen for the AttestedWithdrawal event
       contract.once(
         "AttestedWithdrawal",
-        (batchId: number, beneficiary: string, amount: ethers.BigNumber, attestation: string, metadata: string) => {
+        (GroupId: number, beneficiary: string, amount: ethers.BigNumber, attestation: string, metadata: string) => {
           console.log(`AttestedWithdrawal event received:`);
-          console.log(`Batch ID: ${batchId}, Attestation: ${attestation}`);
-          alert(`Batch ID: ${batchId}, Attestation: ${attestation}`);
+          console.log(`Group ID: ${GroupId}, Attestation: ${attestation}`);
+          alert(`Group ID: ${GroupId}, Attestation: ${attestation}`);
         }
       );
 
       // Call WithdrawPrivatelyProof
-      const withdrawTx = await contract.WithdrawPrivatelyProof(Number(batchID), parsedAmount, meta);
+      const withdrawTx = await contract.WithdrawPrivatelyProof(Number(GroupID), parsedAmount, meta);
       await withdrawTx.wait(); // Ensure the transaction is mined
 
       console.log("Transaction ID:", withdrawTx.hash);
@@ -62,11 +62,11 @@ const WithdrawPrivately = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!batchID || !amount) {
-      alert("Please provide both Batch ID and Amount.");
+    if (!GroupID || !amount) {
+      alert("Please provide both Group ID and Amount.");
       return;
     }
-    await doWithdrawPrivately(batchID, Number(amount));
+    await doWithdrawPrivately(GroupID, Number(amount));
   };
 
   return (
@@ -77,14 +77,14 @@ const WithdrawPrivately = () => {
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="batchID" className="block text-sm font-medium">
-              Batch ID
+            <label htmlFor="GroupID" className="block text-sm font-medium">
+              Group ID
             </label>
             <input
               type="text"
-              id="batchID"
-              value={batchID}
-              onChange={(e) => setBatchID(e.target.value)}
+              id="GroupID"
+              value={GroupID}
+              onChange={(e) => setGroupID(e.target.value)}
               className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:border-blue-500"
             />
           </div>

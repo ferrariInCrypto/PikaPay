@@ -9,6 +9,7 @@ const WithdrawWithAttestation = () => {
   const [txnId, setTxnId] = useState("");
   const { data: signer } = useSigner();
   const { address } = useAccount();
+  const [rec, setRec]=useState('')
   const [buttonInput, setButtonInput] = useState("Withdraw");
 
   const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
@@ -72,13 +73,13 @@ const WithdrawWithAttestation = () => {
   return (
     <div className="font-Archivo">
       <div className="max-w-[650px] mx-auto mt-10 p-9 bg-white rounded-lg shadow-[0_4px_33px_rgba(168,198,207,0.15)] box-border">
-        <h1 className="text-2xl text-gray-800 font-bold mb-4">
-          Withdraw with attestation
+        <h1 className="text-2xl text-gray-800 font-bold mb-8">
+          Withdraw funds with attestation
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="batchID" className="block text-sm font-medium">
-              Batch ID
+              Your Group ID
             </label>
             <input
               type="text"
@@ -88,9 +89,23 @@ const WithdrawWithAttestation = () => {
               className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:border-blue-500"
             />
           </div>
+
+          <div>
+            <label htmlFor="batchID" className="block text-sm font-medium">
+              Receipent Address (Optional)
+            </label>
+            <input
+              type="text"
+              id="batchID"
+              value={rec}
+              onChange={(e) => setRec(e.target.value)}
+              className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
           <div>
             <label htmlFor="amount" className="block text-sm font-medium">
-              Amount
+              Amount to withdraw
             </label>
             <input
               type="number"

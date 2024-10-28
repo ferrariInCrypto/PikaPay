@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'Archivo': ["Archivo", 'sans-serif'],
+        'Titillium-Web': ["Titillium Web", 'sans-serif'],
       },
     },
   },
