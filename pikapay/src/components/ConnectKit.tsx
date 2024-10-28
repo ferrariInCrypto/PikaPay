@@ -1,7 +1,7 @@
 import { ConnectKitButton } from "connectkit";
 
 
-export const CustomConnectButton = () => {
+export const ConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, show, truncatedAddress, ensName }) => {

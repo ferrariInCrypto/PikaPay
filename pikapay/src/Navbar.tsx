@@ -1,5 +1,5 @@
 import { useAccount } from "wagmi";
-import { CustomConnectButton } from "./components/ui/CustomConnectKit";
+import { ConnectButton } from "./components/ConnectKit";
 import pikaLogo from "./pikaLogo.png";
 
 const Navbar = () => {
@@ -8,8 +8,7 @@ const Navbar = () => {
   return (
     <nav className="p-4">
       <div className="flex justify-evenly items-center space-x-4 p-4">
-        {/* Left Side - Heading */}
-        {/* <h1 className="text-gray-700 text-2xl font-bold">PikaPay</h1> */}
+
 
         <div className=" flex justify-center items-center">
           <img width={80} height={80} src={pikaLogo} alt="PikaPay Logo" />
@@ -24,7 +23,7 @@ const Navbar = () => {
               : ""}
           </span>
           {/* Conditional rendering for the Connect Wallet Button */}
-          {status !== "connected" && <CustomConnectButton />}
+          {status !== "connected" && <ConnectButton />}
         </div>
       </div>
     </nav>

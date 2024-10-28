@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useSigner } from "wagmi";
 import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
-import styled from "styled-components";
 
 const TransferBeneficialOwnership = () => {
   const [batchID, setBatchID] = useState("");
@@ -12,26 +11,6 @@ const TransferBeneficialOwnership = () => {
   const [buttonInput, setButtonInput] = useState("Transfer");
   const { data: signer } = useSigner();
 
-
-  const Container = styled.div`
-  @media (max-width: 700px) {
-    width: 100%;
-  }
-`;
-
-const WhiteBox = styled.div`
-  box-shadow: 0 4px 33px rgba(168, 198, 207, 0.15);
-  background-color: #fff;
-  padding: 36px;
-  max-width: 650px;
-  border-radius: 10px;
-  margin: 40px auto 0;
-  box-sizing: border-box;
-
-  @media (max-width: 700px) {
-    width: 100%;
-  }
-`;
   const transferBeneficialOwnership = async (
     batchID: string,
     recipient: string,
@@ -56,7 +35,7 @@ const WhiteBox = styled.div`
       const transferTx = await contract.transferBatchOwnership(
         Number(batchID),
         recipient,
-        ethers.utils.parseUnits(amount.toString(), 18) // Assuming 6 decimals for token
+        ethers.utils.parseUnits(amount.toString(), 18) // Assuming 18 decimals for token
       );
 
       await transferTx.wait();
@@ -91,9 +70,8 @@ const WhiteBox = styled.div`
   };
 
   return (
-    <Container className="font-Archivo">
-      <WhiteBox>
-        <div className="container mx-auto ">
+    <div className="font-Archivo">
+      <div className="max-w-[650px] mx-auto mt-10 p-9 bg-white rounded-lg shadow-[0_4px_33px_rgba(168,198,207,0.15)] box-border">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
           Transfer Ownership Rights
         </h1>
@@ -154,8 +132,7 @@ const WhiteBox = styled.div`
           )}
         </form>
       </div>
-    </WhiteBox>
-    </Container>
+    </div>
   );
 };
 

@@ -2,9 +2,9 @@
 import React from 'react';
 
 interface NavButtonProps {
-  active?: boolean; // Optional prop to indicate active state
-  onClick: () => void; // Function to call on click
-  children: React.ReactNode; // Content inside the button
+  active?: boolean; 
+  onClick: () => void; 
+  children: React.ReactNode; 
 }
 
 const NavButton: React.FC<NavButtonProps> = ({ active = false, onClick, children }) => {

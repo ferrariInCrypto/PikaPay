@@ -3,7 +3,7 @@ import { useSigner, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
-const WithdrawWithAttestation = () => {
+const WithdrawPrivately = () => {
   const [batchID, setBatchID] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
@@ -11,7 +11,7 @@ const WithdrawWithAttestation = () => {
   const { address } = useAccount();
   const [buttonInput, setButtonInput] = useState("Withdraw");
 
-  const doWithdrawWithAttestation = async (batchID: string, amount: number) => {
+  const doWithdrawPrivately = async (batchID: string, amount: number) => {
     if (!signer) {
       alert("Please connect your wallet.");
       return;
@@ -46,8 +46,8 @@ const WithdrawWithAttestation = () => {
         }
       );
 
-      // Call withdrawWithAttestationProof
-      const withdrawTx = await contract.withdrawWithAttestationProof(Number(batchID), parsedAmount, meta);
+      // Call WithdrawPrivatelyProof
+      const withdrawTx = await contract.WithdrawPrivatelyProof(Number(batchID), parsedAmount, meta);
       await withdrawTx.wait(); // Ensure the transaction is mined
 
       console.log("Transaction ID:", withdrawTx.hash);
@@ -66,7 +66,7 @@ const WithdrawWithAttestation = () => {
       alert("Please provide both Batch ID and Amount.");
       return;
     }
-    await doWithdrawWithAttestation(batchID, Number(amount));
+    await doWithdrawPrivately(batchID, Number(amount));
   };
 
   return (
@@ -124,4 +124,4 @@ const WithdrawWithAttestation = () => {
   );
 };
 
-export default WithdrawWithAttestation;
+export default WithdrawPrivately;

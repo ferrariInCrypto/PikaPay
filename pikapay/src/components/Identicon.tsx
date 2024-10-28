@@ -1,15 +1,4 @@
 import * as jdenticon from "jdenticon";
-import styled from "styled-components";
-
-type ContainerProps = {
-  size: number;
-};
-
-const Container = styled.div<ContainerProps>`
-  width: ${({ size }) => size}px;
-  height: ${({ size }) => size}px;
-  cursor: pointer;
-`;
 
 type Props = {
   address: string;
@@ -24,12 +13,15 @@ export function Identicon({ address, size, className, onClick }: Props) {
   if (!address || !icon) return null;
 
   return (
-    <Container size={size} className={className} onClick={onClick}>
+    <div
+      className={`w-[${size}px] h-[${size}px] cursor-pointer ${className}`}
+      onClick={onClick}
+    >
       <img
         alt={"Identicon"}
-        style={{ borderRadius: 100 }}
+        className="rounded-full"
         src={`data:image/svg+xml;utf8,${encodeURIComponent(icon)}`}
       />
-    </Container>
+    </div>
   );
 }
