@@ -4,11 +4,12 @@ import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
 const TransferBeneficialOwnership = () => {
-  const [batchID, setBatchID] = useState("");
+  const [notification, setNotification] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
   const [buttonInput, setButtonInput] = useState("Transfer");
+  const [batchID, setBatchID] = useState("");
   const { data: signer } = useSigner();
 
   const transferBeneficialOwnership = async (
@@ -53,6 +54,7 @@ const TransferBeneficialOwnership = () => {
           alert(`Ownership Transferred successfully! Tx ID: ${transferTx.hash}`);
         }
       );
+
     } catch (error: any) {
       console.error("Transfer Error: ", error);
       alert("Transfer failed: " + error.message);
@@ -91,6 +93,7 @@ const TransferBeneficialOwnership = () => {
           <div>
             <label htmlFor="recipient" className="block text-sm font-medium">
               Recipient Address
+              
             </label>
             <input
               type="text"

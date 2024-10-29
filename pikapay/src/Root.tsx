@@ -4,7 +4,7 @@ import { ConnectKitProvider, getDefaultClient } from "connectkit";
 import "./App.css";
 import Navbar from "./Navbar";
 
-// Define BTTC Testnet Chain Configuration
+
 const bttcTestnetChain = {
   id: 1029, // BTTC Testnet Chain ID
   network: "BTTC Testnet",
@@ -38,7 +38,7 @@ export function Root() {
         <ConnectKitProvider
           theme={"soft"}
           customTheme={{
-            "--ck-font-family": '"Nunito", sans-serif',
+            "--ck-font-family": '"Titillium-Web", sans-serif',
           }}
           options={{
             hideQuestionMarkCTA: true,

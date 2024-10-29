@@ -8,13 +8,13 @@ import {
 import { ethers } from "ethers";
 import { ERC20_ABI } from "./helpers/Erc20Abi";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
 const Deposit = () => {
   const { status, address } = useAccount();
   const { data: signer } = useSigner();
 
-  const [payrollDate, setPayrollDate]=useState('')
+  const [payrollDate, setPayrollDate] = useState("");
   const [business, setBusiness] = useState("");
   const [purpose, setPurpose] = useState("");
   const [amount, setAmount] = useState("");
@@ -23,15 +23,19 @@ const Deposit = () => {
   const [batch, setBatch] = useState<number | null>(null);
   const [notification, setNotification] = useState("");
 
-  const notify = (id: any) => toast('Here is your batchId' + " : " + id);
+  const notify = (id: any) => toast("Here is your batchId" + " : " + id);
 
-  const eas = new Offchain({
-    address: "0x0000000000000000000000000000000000000000", // Replace with actual EAS address
-    chainId: 1029,
-    version: "0.26",
-  }, 1);
+  const eas = new Offchain(
+    {
+      address: "0x0000000000000000000000000000000000000000", // Replace with actual EAS address
+      chainId: 1029,
+      version: "0.26",
+    },
+    1
+  );
 
   const PIKAPAYContractAddress = "0x005e9582bAA30520ba18cd1f859A0bB6919674D3";
+  const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
 
   const createAttestation = async (
     business: string,
@@ -47,18 +51,23 @@ const Deposit = () => {
       { name: "sender", type: "address", value: sender },
     ]);
 
-    const attestation = await eas.signOffchainAttestation({
-      recipient: PIKAPAYContractAddress,
-      data: encoded,
-      refUID: ethers.constants.HashZero,
-      revocable: true,
-      expirationTime: 0,
-      schema: "0xb16fa048b0d597f5a821747eba64efa4762ee5143e9a80600d0005386edfc995",
-      version: 1,
-      time: Math.floor(Date.now() / 1000),
-    }, signer as unknown as TypedDataSigner);
+    const attestation = await eas.signOffchainAttestation(
+      {
+        recipient: PIKAPAYContractAddress,
+        data: encoded,
+        refUID: ethers.constants.HashZero,
+        revocable: true,
+        expirationTime: 0,
+        schema:
+          "0xb16fa048b0d597f5a821747eba64efa4762ee5143e9a80600d0005386edfc995",
+        version: 1,
+        time: Math.floor(Date.now() / 1000),
+      },
+      signer as unknown as TypedDataSigner
+    );
 
     console.log("offchain attestation:", JSON.stringify(attestation));
+
     return JSON.stringify(attestation);
   };
 
@@ -69,10 +78,16 @@ const Deposit = () => {
     setButtonInput("Depositing ..");
 
     try {
-      const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer!);
+      const tokenContract = new ethers.Contract(
+        tokenAddress,
+        ERC20_ABI,
+        signer!
+      );
       const unlimitedAmount = ethers.constants.MaxUint256;
-      const approveTx = await tokenContract.approve(PIKAPAYContractAddress, unlimitedAmount);
+      const approveTx = await tokenContract.approve(
+        PIKAPAYContractAddress,
+        unlimitedAmount
+      );
       await approveTx.wait();
       console.log("Approval transaction confirmed");
     } catch (error: any) {
@@ -81,25 +96,39 @@ const Deposit = () => {
     }
 
     try {
-      const contract = new ethers.Contract(PIKAPAYContractAddress, PIKAPAY_ABI.abi, signer!);
+      const contract = new ethers.Contract(
+        PIKAPAYContractAddress,
+        PIKAPAY_ABI.abi,
+        signer!
+      );
 
-      contract.on("BatchCreated", (
-        batchId: number,
-        address: string,
-        attestation: string,
-        amount: ethers.BigNumber
-      ) => {
-        console.log("BatchCreated event received:", address);
-        console.log(`Batch ID: ${batchId}`, `Attestation: ${attestation}`, `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`);
+      contract.on(
+        "BatchCreated",
+        (
+          batchId: number,
+          address: string,
+          attestation: string,
+          amount: ethers.BigNumber
+        ) => {
+          console.log("BatchCreated event received:", address);
+          console.log(
+            `Batch ID: ${batchId}`,
+            `Attestation: ${attestation}`,
+            `Amount: ${ethers.utils.formatUnits(amount, 18)} USDT`
+          );
 
-        setBatch(batchId);
-        setNotification(`Batch Created Successfully! Batch ID: ${batchId}`);
-        setButtonInput("Deposit");
-        notify(batchId);
-      });
+          setBatch(batchId);
+          setNotification(`Batch Created Successfully! Batch ID: ${batchId}`);
+          setButtonInput("Deposit");
+          notify(batchId);
+        }
+      );
 
       const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18);
-      const depositTx = await contract.createNewBatchWithAttestation(attestation, parsedAmount);
+      const depositTx = await contract.createNewBatchWithAttestation(
+        attestation,
+        parsedAmount
+      );
       await depositTx.wait();
 
       setTxnId(depositTx.hash);
@@ -113,17 +142,25 @@ const Deposit = () => {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    const attestation = await createAttestation(business, purpose, address as string);
+    const attestation = await createAttestation(
+      business,
+      purpose,
+      address as string
+    );
     await depositFundsWithAttestation(Number(amount), attestation);
   };
 
   return (
     <div className="font-Archivo">
       <div className="max-w-[650px] mx-auto mt-10 p-9 bg-white rounded-lg shadow-[0_4px_33px_rgba(168,198,207,0.15)] box-border">
-        <h1 className="text-2xl text-gray-800 font-bold mb-8">Deposit funds in the pool</h1>
+        <h1 className="text-2xl text-gray-800 font-bold mb-8">
+          Deposit funds in the pool
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="business" className="block text-sm font-medium">Business name</label>
+            <label htmlFor="business" className="block text-sm font-medium">
+              Business name
+            </label>
             <input
               type="text"
               id="business"
@@ -134,7 +171,9 @@ const Deposit = () => {
           </div>
 
           <div>
-            <label htmlFor="purpose" className="block text-sm font-medium">Payroll Date</label>
+            <label htmlFor="purpose" className="block text-sm font-medium">
+              Payroll Date
+            </label>
             <input
               type="text"
               id="purpose"
@@ -144,7 +183,9 @@ const Deposit = () => {
             />
           </div>
           <div>
-            <label htmlFor="purpose" className="block text-sm font-medium">Payment Notes </label>
+            <label htmlFor="purpose" className="block text-sm font-medium">
+              Payment Notes{" "}
+            </label>
             <input
               type="text"
               id="purpose"
@@ -154,7 +195,9 @@ const Deposit = () => {
             />
           </div>
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium">Amount to Deposit</label>
+            <label htmlFor="amount" className="block text-sm font-medium">
+              Amount to Deposit
+            </label>
             <input
               type="number"
               id="amount"

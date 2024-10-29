@@ -5,7 +5,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./PikaFractionalAttestationToken.sol";
-import "./ZKPVerifier.sol"; // Import zk-SNARK verifier
+import "./ZKPVerifier.sol"; // zk-SNARK verifier
 
 //@@ This contract is under development
 
