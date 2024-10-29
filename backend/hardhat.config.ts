@@ -14,8 +14,18 @@ const config: HardhatUserConfig = {
     bttcTestnet: {
       url: "https://pre-rpc.bittorrentchain.io/",   // BTTC Testnet RPC URL
       chainId: 1029,                   // BTTC Testnet chain ID
-      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],  // Your private key from the .env file
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],  
     },
+  },
+
+  circom: {
+    inputBasePath: "./circuits",
+    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau",
+    circuits: [
+      {
+        name: "Transfer",
+      },
+    ],
   },
 };
 
