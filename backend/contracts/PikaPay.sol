@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./PikaFractionalAttestationToken.sol";
 import "./ZKPVerifier.sol"; // zk-SNARK verifier
-
-
 //transfer function should do this while transfering employer stores commitment onchain which  was computed offchain using circom inputs then  assign the input 
 // balance with specific commitment then  the  withdrawer should do a zk proof to the commitment to wthdraw the balance assigned to his commitment.
+
+
 
 //@@ This contract is under development
 
