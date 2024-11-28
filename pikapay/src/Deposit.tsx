@@ -28,14 +28,15 @@ const Deposit = () => {
   const eas = new Offchain(
     {
       address: "0x0000000000000000000000000000000000000000", // Replace with actual EAS address
-      chainId: 1029,
+      chainId: 199,
       version: "0.26",
     },
     1
   );
 
-  const PIKAPAYContractAddress = "0x005e9582bAA30520ba18cd1f859A0bB6919674D3";
-  const tokenAddress = "0x48db5c1155836dE945fB82b6A9CF82D91AC21f16";
+  const PIKAPAYContractAddress = "0x545e659C285744239A64112821Ff9bAEFcBE201F";
+
+  const [tokenAddress, settokenAddress] = useState("");
 
   const createAttestation = async (
     business: string,
@@ -83,6 +84,18 @@ const Deposit = () => {
         ERC20_ABI,
         signer!
       );
+
+      // Get the signer's token balance
+      const balance = await tokenContract.balanceOf(await signer!.getAddress());
+      const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18);
+
+      // Check if the signer has enough balance
+      if (balance.lt(parsedAmount)) {
+        alert("Insufficient balance for this transaction.");
+        console.log("Insufficient balance.");
+        setButtonInput("Deposit");
+        return; // Stop the function if not enough balance
+      }
       const unlimitedAmount = ethers.constants.MaxUint256;
       const approveTx = await tokenContract.approve(
         PIKAPAYContractAddress,
@@ -103,14 +116,8 @@ const Deposit = () => {
       );
 
       contract.on(
-        "BatchCreated",
-        (
-          batchId: number,
-          address: string,
-          attestation: string,
-          amount: ethers.BigNumber
-        ) => {
-          console.log("BatchCreated event received:", address);
+        "Deposit",
+        (batchId: number, attestation: string, amount: ethers.BigNumber) => {
           console.log(
             `Batch ID: ${batchId}`,
             `Attestation: ${attestation}`,
@@ -125,7 +132,8 @@ const Deposit = () => {
       );
 
       const parsedAmount = ethers.utils.parseUnits(amount.toString(), 18);
-      const depositTx = await contract.createNewBatchWithAttestation(
+      const depositTx = await contract.deposit(
+        tokenAddress,
         attestation,
         parsedAmount
       );
@@ -135,6 +143,8 @@ const Deposit = () => {
       setAmount("");
       setBusiness("");
       setPurpose("");
+      settokenAddress("");
+      setPayrollDate("");
     } catch (error) {
       console.error("Error depositing funds:", error);
     }
@@ -171,6 +181,19 @@ const Deposit = () => {
           </div>
 
           <div>
+            <label htmlFor="business" className="block text-sm font-medium">
+              Token Address
+            </label>
+            <input
+              type="text"
+              id="tokenAddress"
+              value={tokenAddress}
+              onChange={(e) => settokenAddress(e.target.value)}
+              className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+
+          <div>
             <label htmlFor="purpose" className="block text-sm font-medium">
               Payroll Date
             </label>
@@ -184,7 +207,7 @@ const Deposit = () => {
           </div>
           <div>
             <label htmlFor="purpose" className="block text-sm font-medium">
-              Payment Notes{" "}
+              Notes{" "}
             </label>
             <input
               type="text"
@@ -217,7 +240,7 @@ const Deposit = () => {
               <p className="mt-4">
                 <a
                   className="font-Archivo text-gray-500"
-                  href={"https://testnet.bttcscan.com/tx/" + txnId}
+                  href={"https://bttcscan.com/tx/" + txnId}
                 >
                   TxID: {txnId.slice(0, 9) + "..." + txnId.slice(9, 18)}
                 </a>

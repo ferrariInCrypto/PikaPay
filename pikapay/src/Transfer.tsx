@@ -4,7 +4,6 @@ import { ethers } from "ethers";
 import PIKAPAY_ABI from "./artifacts/contracts/PikaPay.sol/PikaPay.json";
 
 const TransferBeneficialOwnership = () => {
-  const [notification, setNotification] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [txnId, setTxnId] = useState("");
@@ -17,7 +16,7 @@ const TransferBeneficialOwnership = () => {
     recipient: string,
     amount: number
   ) => {
-    const PIKAPAYContractAddress = "0x005e9582bAA30520ba18cd1f859A0bB6919674D3";
+    const PIKAPAYContractAddress = "0x545e659C285744239A64112821Ff9bAEFcBE201F";
 
     if (!signer) {
       alert("Please connect your wallet first");
@@ -33,7 +32,7 @@ const TransferBeneficialOwnership = () => {
     try {
       setButtonInput("Transferring...");
 
-      const transferTx = await contract.transferBatchOwnership(
+      const transferTx = await contract.transferBeneficialOwnership(
         Number(batchID),
         recipient,
         ethers.utils.parseUnits(amount.toString(), 18) // Assuming 18 decimals for token
@@ -45,19 +44,11 @@ const TransferBeneficialOwnership = () => {
       setButtonInput("Transfer");
 
       // Listen for the OwnershipTransferred event
-      contract.once(
-        "OwnershipTransferred",
-        (batchId, previousOwner, newOwner, transferredAmount) => {
-          console.log(
-            `Ownership Transferred: Batch ID ${batchId}, from ${previousOwner} to ${newOwner}, amount: ${transferredAmount.toString()}`
-          );
-          alert(`Ownership Transferred successfully! Tx ID: ${transferTx.hash}`);
-        }
-      );
+      
 
     } catch (error: any) {
       console.error("Transfer Error: ", error);
-      alert("Transfer failed: " + error.message);
+
       setButtonInput("Transfer");
     }
   };
@@ -122,12 +113,12 @@ const TransferBeneficialOwnership = () => {
             {buttonInput}
           </button>
 
-          <p className="mt-4 text-gray-500"> Note : This transfer would be using zksnarks to ensure privacy preservations. </p>
+          <p className="mt-4 text-gray-500"> Note : Store the withdraw proof in a secure location. (Not available for now) </p>
           {txnId && (
             <p className="mt-4">
               <a
                 className="text-gray-500"
-                href={`https://testnet.bttcscan.com/tx/${txnId}`}
+                href={`https://bttcscan.com/tx/${txnId}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

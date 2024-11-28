@@ -5,21 +5,21 @@ import "./App.css";
 import Navbar from "./Navbar";
 
 
-const bttcTestnetChain = {
-  id: 1029, // BTTC Testnet Chain ID
-  network: "BTTC Testnet",
-  name: "BTTC Testnet",
+const BTTCMainnet = {
+  id: 199, // BTTC Testnet Chain ID
+  network: "BitTorrent Chain Mainnet",
+  name: "BitTorrent Chain Mainnet",
   nativeCurrency: {
     name: "BitTorrent",
     symbol: "BTT",
     decimals: 18,
   },
   rpcUrls: {
-    default: { http: ["https://pre-rpc.bittorrentchain.io/"] }, // Testnet RPC URL
-    public: { http: ["https://pre-rpc.bittorrentchain.io/"] }, // Added 'public' to satisfy type requirements
+    default: { http: ["https://rpc.bittorrentchain.io"] }, //  RPC URL
+    public: { http: ["https://rpc.bittorrentchain.io"] }, // Added 'public' to satisfy type requirements
   },
   blockExplorers: {
-    default: { name: "BitTorrent Chain Donau", url: "https://testscan.bittorrentchain.io/" },
+    default: { name: "BitTorrent Chain Mainnet", url: "https://bittorrentchain.io/" },
   },
 };
 
@@ -27,7 +27,7 @@ const bttcTestnetChain = {
 const client = createClient(
   getDefaultClient({
     appName: "PikaPay",
-    chains: [bttcTestnetChain], // Wrapped in an array
+    chains: [BTTCMainnet], // Wrapped in an array
   })
 );
 

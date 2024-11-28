@@ -17,7 +17,7 @@ const WithdrawPrivately = () => {
       return;
     }
 
-    const PIKAPAYContractAddress = "0x005e9582bAA30520ba18cd1f859A0bB6919674D3";
+    const PIKAPAYContractAddress = "0x545e659C285744239A64112821Ff9bAEFcBE201F";
     const contract = new ethers.Contract(PIKAPAYContractAddress, PIKAPAY_ABI.abi, signer);
     const meta = "";
     setButtonInput("Withdrawing...");
@@ -47,7 +47,7 @@ const WithdrawPrivately = () => {
       );
 
       // Call WithdrawPrivatelyProof
-      const withdrawTx = await contract.WithdrawPrivatelyProof(Number(GroupID), parsedAmount, meta);
+      const withdrawTx = await contract.withdrawPrivately(Number(GroupID), parsedAmount, meta);
       await withdrawTx.wait(); // Ensure the transaction is mined
 
       console.log("Transaction ID:", withdrawTx.hash);
@@ -110,7 +110,7 @@ const WithdrawPrivately = () => {
             <p className="mt-4">
               <a
                 className="text-gray-500"
-                href={`https://testnet.bttcscan.com/tx/${txnId}`}
+                href={`https://bttcscan.com/tx/${txnId}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
